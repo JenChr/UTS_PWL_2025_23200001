@@ -11,6 +11,50 @@ export default function PreorderPage() {
   const [ qty, setQty ] = useState('');
   const [ status, setStatus ] = useState('');
   const [ msg, setMsg ] = useState('');
+  const [ preorders, setPreorders] = useState([]);
+  const [editId, setEditId] = useState(null);
+  const fetchPreorders = async () => {
+    const res = await fetch('/api/preorder');
+    const data = await res.json();
+    setPreorders(data);
+    };
+    useEffect(() => {
+    fetchPreorders();
+    }, []);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const method = editId ? 'PUT' : 'POST';
+        const res = await fetch('/api/preorder', {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order_date, order_by, selected_package, qty, is_paid }),
+        });
+
+        if (res.ok) {
+            setMsg('Berhasil disimpan!');
+            setOrderDate('');
+            setOrderBy('');
+            setSelectedPackage('');
+            setQty('');
+            setIs_paid('');
+            setEditId(null);
+            setFormVisible(false);
+            fetchPreorders(); // refresh data
+        } else {
+            setMsg('Gagal menyimpan data');
+        }
+        };
+    
+        const handleEdit = (item) => {
+            setOrderDate(item.order_date ? item.order_date.split('.')[0] : '');
+            setOrderBy(item.order_by);
+            setSelectedPackage(item.selected_package);
+            setQty(item.qty);
+            setIs_paid(item.is_paid);
+            setEditId(item.id);
+            setFormVisible(true);
+            };
 
   return (
     <div className={styles.container}>
