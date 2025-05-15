@@ -3,7 +3,6 @@ import styles from './PreorderPage.module.css';
 import { useEffect, useState } from 'react';
 
 export default function PreorderPage() {
-
   const [formVisible, setFormVisible] = useState(false);
   const [ order_date, SetOrderDate ] = useState('');
   const [ order_by, SetOrderBy ] = useState('');
@@ -56,6 +55,18 @@ export default function PreorderPage() {
             setFormVisible(true);
             };
 
+    const handleDelete = async (id) => {
+                if (!confirm('Yakin hapus data ini?')) return;
+              
+                await fetch('/api/preorder', {
+                  method: 'DELETE',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ id }),
+                });
+              
+                fetchPreorders(); // refresh data preorder
+              };
+              
   return (
     <div className={styles.container}>
         <h1 className={styles.title}>Ayam Penyet Koh Alex</h1>
