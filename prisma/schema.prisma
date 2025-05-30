@@ -13,5 +13,20 @@ model Preorder {
   order_by         String
   selected_package String
   qty              Int
-  status           String
+  is_paid          Boolean
+} 
+
+model Pkg {
+  id               Int      @id @default(autoincrement())
+  kode             String   @unique
+  nama             String
+  deskripsi        String
+} 
+
+model customer {
+  id               Int      @id @default(autoincrement())
+  name             String   
+  phone            String
+  email            String?
+  createdAt DateTime @default(now()) 
 } 

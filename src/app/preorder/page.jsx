@@ -3,70 +3,87 @@ import styles from './PreorderPage.module.css';
 import { useEffect, useState } from 'react';
 
 export default function PreorderPage() {
-  const [formVisible, setFormVisible] = useState(false);
-  const [ order_date, SetOrderDate ] = useState('');
-  const [ order_by, SetOrderBy ] = useState('');
+
+  const [ formVisible, setFormVisible ] = useState(false);
+  const [ preorders, setpreorders ] = useState([]);
+  const [ order_date, setOrderDate ] = useState('');
+  const [ order_by, setOrderBy ] = useState('');
   const [ selected_package, setSelectedPackage ]= useState('');
   const [ qty, setQty ] = useState('');
-  const [ status, setStatus ] = useState('');
+  const [ is_paid, setStatus ] = useState('');
   const [ msg, setMsg ] = useState('');
-  const [ preorders, setPreorders] = useState([]);
-  const [editId, setEditId] = useState(null);
-  const fetchPreorders = async () => {
+  const [ editId, setEditId ] = useState(null);
+  const [pkgs, setPkgs] = useState([]);
+  const [customers, setcustomers] = useState([]);
+
+  const fetchpreorders = async () => {
     const res = await fetch('/api/preorder');
     const data = await res.json();
-    setPreorders(data);
-    };
-    useEffect(() => {
-    fetchPreorders();
-    }, []);
+    setpreorders(data);
+  };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        const method = editId ? 'PUT' : 'POST';
-        const res = await fetch('/api/preorder', {
-            method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ order_date, order_by, selected_package, qty, is_paid }),
-        });
+   const fetchPkgs = async () => {
+    const res = await fetch('api/pkg');
+    const data = await res.json();
+    setPkgs(data);
+  }
 
-        if (res.ok) {
-            setMsg('Berhasil disimpan!');
-            setOrderDate('');
-            setOrderBy('');
-            setSelectedPackage('');
-            setQty('');
-            setIs_paid('');
-            setEditId(null);
-            setFormVisible(false);
-            fetchPreorders(); // refresh data
-        } else {
-            setMsg('Gagal menyimpan data');
-        }
-        };
-    
-        const handleEdit = (item) => {
-            setOrderDate(item.order_date ? item.order_date.split('.')[0] : '');
-            setOrderBy(item.order_by);
-            setSelectedPackage(item.selected_package);
-            setQty(item.qty);
-            setIs_paid(item.is_paid);
-            setEditId(item.id);
-            setFormVisible(true);
-            };
+   const fetchcustomers = async () => {
+    const res = await fetch('api/customer');
+    const data = await res.json();
+    setcustomers(data);
+  }
+  
+  useEffect(() => {
+    fetchpreorders();
+    fetchPkgs();
+    fetchcustomers();
+  }, []);
 
-    const handleDelete = async (id) => {
-                if (!confirm('Yakin hapus data ini?')) return;
-              
-                await fetch('/api/preorder', {
-                  method: 'DELETE',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ id }),
-                });
-              
-                fetchPreorders(); // refresh data preorder
-              };
-              
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const method = editId ? 'PUT' : 'POST';
+    const res = await fetch('/api/preorder', {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: editId, order_date, order_by, selected_package, qty, is_paid }),
+    });
+
+    if (res.ok) {
+      setMsg('Saved Successfully!');
+      setOrderDate('');
+      setOrderBy('');
+      setSelectedPackage('');
+      setQty('');
+      setStatus('');
+      setEditId(null);
+      setFormVisible(false);
+      fetchpreorders();
+    } else {
+      setMsg('Failed to Save Data!');
+    }
+  };
+
+  const handleEdit = (item) => {
+      setOrderDate(item.order_date ? new Date(item.order_date).toISOString().split('T')[0] : '');
+      setOrderBy(item.order_by);
+      setSelectedPackage(item.selected_package);
+      setQty(item.qty);
+      setStatus(item.is_paid ? 'Lunas':'Belum Lunas');
+      setEditId(item.id);
+      setFormVisible(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('Are You Sure?')) return;
+    await fetch('/api/preorder', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+    fetchpreorders();
+  };
+
   return (
     <div className={styles.container}>
         <h1 className={styles.title}>Ayam Penyet Koh Alex</h1>
@@ -79,7 +96,7 @@ export default function PreorderPage() {
         {formVisible && (
             <div className={styles.formWrapper}>
                 <h3>Input Data Baru</h3>
-                <form>
+                <form onSubmit={handleSubmit}>
                 <div className={styles.formGroup}>
                     <span>Tanggal Pesanan</span>
                     <input
@@ -91,27 +108,38 @@ export default function PreorderPage() {
                 </div>
                 <div className={styles.formGroup}>
                     <span>Nama Pemesan</span>
-                    <input
-                    type="text"
-                    value={order_by}
-                    onChange={(e) => setOrderBy(e.target.value)}
-                    placeholder="Masukkan Nama Pemesan"
-                    required
-                    />
+                    <select 
+                        value={order_by}
+                        onChange={(e) => setOrderBy(e.target.value)}
+                        required
+                    >
+                        <option value="">Pilih Pemesan</option>
+                         {customers.map((item, index) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))} 
+        
+        
+                    </select>
                 </div>
+
+
                 <div className={styles.formGroup}>
-                    <span>Paket</span>
+                    <span>Paket</span> 
                     <select 
                         value={selected_package}
                         onChange={(e) => setSelectedPackage(e.target.value)}
                         required
                     >
                         <option value="">Pilih Paket</option>
-                        <option value="Paket 1">Paket 1</option>
-                        <option value="Paket 2">Paket 2</option>
-                        <option value="Paket 3">Paket 3</option>
-                        <option value="Paket 4">Paket 4</option>
-                        <option value="Paket 5">Paket 5</option>
+                         {pkgs.map((item, index) => (
+                          <option key={item.id} value={item.id}>
+                            {item.nama}
+                          </option>
+                        ))} 
+        
+        
                     </select>
                 </div>
                 <div className={styles.formGroup}>
@@ -130,7 +158,7 @@ export default function PreorderPage() {
                     <input
                     type="radio"
                     value="Lunas"
-                    checked={status === "Lunas"}
+                    checked={is_paid === "Lunas"}
                     onChange={(e) => setStatus(e.target.value)}
                     />
                     Lunas
@@ -139,7 +167,7 @@ export default function PreorderPage() {
                     <input
                     type="radio"
                     value="Belum Lunas"
-                    checked={status === "Belum Lunas"}
+                    checked={is_paid === "Belum Lunas"}
                     onChange={(e) => setStatus(e.target.value)}
                     />
                     Belum Lunas
@@ -166,8 +194,29 @@ export default function PreorderPage() {
                     <th>Aksi</th>
                 </tr>
                 </thead>
+                <tbody>
+                    {preorders.map((item, index) => (
+                        <tr key={item.id}>
+                        <td>{index + 1}</td>
+                        <td>{new Date(item.order_date).toLocaleDateString('en-GB')}</td>
+                        <td>{item.order_by}</td>
+                        <td>{item.selected_package}</td>
+                        <td>{item.qty}</td>
+                        <td>{item.is_paid ? 'Lunas':'Belum Lunas'}</td>
+                        <td>
+                          <button onClick={() => handleEdit(item)}>Edit</button>
+                          <button onClick={() => handleDelete(item.id)}>Delete</button>
+                        </td>
+                        </tr>
+                    ))}
+                    {preorders.length === 0 && (
+                        <tr>
+                        <td colSpan="8">No Data Available</td>
+                        </tr>
+                    )}
+                </tbody>
             </table>    
         </div>
     </div>
   );
-}
+} 

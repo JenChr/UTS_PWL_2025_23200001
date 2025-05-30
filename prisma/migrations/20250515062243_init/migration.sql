@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "preorder" (
+CREATE TABLE "Preorder" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "order_date" DATETIME NOT NULL,
     "order_by" TEXT NOT NULL,
