@@ -1,43 +1,49 @@
 "use client";
 import styles from './PreorderPage.module.css';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function PreorderPage() {
-
-  const [ formVisible, setFormVisible ] = useState(false);
-  const [ preorders, setpreorders ] = useState([]);
-  const [ order_date, setOrderDate ] = useState('');
-  const [ order_by, setOrderBy ] = useState('');
-  const [ selected_package, setSelectedPackage ]= useState('');
-  const [ qty, setQty ] = useState('');
-  const [ is_paid, setStatus ] = useState('');
-  const [ msg, setMsg ] = useState('');
-  const [ editId, setEditId ] = useState(null);
+  const [formVisible, setFormVisible] = useState(false);
+  const [preorders, setPreorders] = useState([]);
+  const [order_date, setOrderDate] = useState('');
+  const [order_by, setOrderBy] = useState('');
+  const [selected_package, setSelectedPackage] = useState('');
+  const [qty, setQty] = useState('');
+  const [is_paid, setStatus] = useState('');
+  const [msg, setMsg] = useState('');
+  const [editId, setEditId] = useState(null);
   const [pkgs, setPkgs] = useState([]);
-  const [customers, setcustomers] = useState([]);
+  const [customers, setCustomers] = useState([]);
 
-  const fetchpreorders = async () => {
-    const res = await fetch('/api/preorder');
-    const data = await res.json();
-    setpreorders(data);
+  const router = useRouter();
+  const handleChange = (e) => {
+    const path = e.target.value;
+    if (path) router.push(path);
   };
 
-   const fetchPkgs = async () => {
-    const res = await fetch('api/pkg');
+  const fetchPreorders = async () => {
+    const res = await fetch('/api/preorder');
+    const data = await res.json();
+    setPreorders(data);
+  };
+
+  const fetchPkgs = async () => {
+    const res = await fetch('/api/pkg');
     const data = await res.json();
     setPkgs(data);
-  }
+  };
 
-   const fetchcustomers = async () => {
-    const res = await fetch('api/customer');
+  const fetchCustomers = async () => {
+    const res = await fetch('/api/customer');
     const data = await res.json();
-    setcustomers(data);
-  }
-  
+    setCustomers(data);
+  };
+
   useEffect(() => {
-    fetchpreorders();
+    fetchPreorders();
     fetchPkgs();
-    fetchcustomers();
+    fetchCustomers();
   }, []);
 
   const handleSubmit = async (e) => {
@@ -58,20 +64,20 @@ export default function PreorderPage() {
       setStatus('');
       setEditId(null);
       setFormVisible(false);
-      fetchpreorders();
+      fetchPreorders();
     } else {
       setMsg('Failed to Save Data!');
     }
   };
 
   const handleEdit = (item) => {
-      setOrderDate(item.order_date ? new Date(item.order_date).toISOString().split('T')[0] : '');
-      setOrderBy(item.order_by);
-      setSelectedPackage(item.selected_package);
-      setQty(item.qty);
-      setStatus(item.is_paid ? 'Lunas':'Belum Lunas');
-      setEditId(item.id);
-      setFormVisible(true);
+    setOrderDate(item.order_date ? new Date(item.order_date).toISOString().split('T')[0] : '');
+    setOrderBy(item.order_by.toString());
+    setSelectedPackage(item.selected_package.toString());
+    setQty(item.qty.toString());
+    setStatus(item.is_paid ? 'Lunas' : 'Belum Lunas');
+    setEditId(item.id);
+    setFormVisible(true);
   };
 
   const handleDelete = async (id) => {
@@ -81,142 +87,136 @@ export default function PreorderPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id }),
     });
-    fetchpreorders();
+    fetchPreorders();
   };
 
   return (
     <div className={styles.container}>
-        <h1 className={styles.title}>Ayam Penyet Koh Alex</h1>
-        <button
-            className={styles.buttonToggle}
-            onClick={() => setFormVisible(!formVisible)}>
-            {formVisible ? 'Tutup Form' : 'Tambah Data'}
-        </button>
-        
-        {formVisible && (
-            <div className={styles.formWrapper}>
-                <h3>Input Data Baru</h3>
-                <form onSubmit={handleSubmit}>
-                <div className={styles.formGroup}>
-                    <span>Tanggal Pesanan</span>
-                    <input
-                    type="date"
-                    value={order_date}
-                    onChange={(e) => setOrderDate(e.target.value)}
-                    required
-                    />
-                </div>
-                <div className={styles.formGroup}>
-                    <span>Nama Pemesan</span>
-                    <select 
-                        value={order_by}
-                        onChange={(e) => setOrderBy(e.target.value)}
-                        required
-                    >
-                        <option value="">Pilih Pemesan</option>
-                         {customers.map((item, index) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))} 
-        
-        
-                    </select>
-                </div>
+      <h1 className={styles.title}>Ayam Penyet Koh Alex</h1>
+      <button
+        className={styles.buttonToggle}
+        onClick={() => setFormVisible(!formVisible)}
+      >
+        {formVisible ? 'Tutup Form' : 'Tambah Data'}
+      </button>
 
-
-                <div className={styles.formGroup}>
-                    <span>Paket</span> 
-                    <select 
-                        value={selected_package}
-                        onChange={(e) => setSelectedPackage(e.target.value)}
-                        required
-                    >
-                        <option value="">Pilih Paket</option>
-                         {pkgs.map((item, index) => (
-                          <option key={item.id} value={item.id}>
-                            {item.nama}
-                          </option>
-                        ))} 
-        
-        
-                    </select>
-                </div>
-                <div className={styles.formGroup}>
-                    <span>Jumlah</span>
-                    <input
-                    type="text"
-                    value={qty}
-                    onChange={(e) => setQty(e.target.value)}
-                    placeholder="Input Jumlah"
-                    required
-                    />
-                </div>
-                <div className={styles.formGroup}>
-                    <span>Status</span>
-                    <label>
-                    <input
-                    type="radio"
-                    value="Lunas"
-                    checked={is_paid === "Lunas"}
-                    onChange={(e) => setStatus(e.target.value)}
-                    />
-                    Lunas
-                </label>
-                <label>
-                    <input
-                    type="radio"
-                    value="Belum Lunas"
-                    checked={is_paid === "Belum Lunas"}
-                    onChange={(e) => setStatus(e.target.value)}
-                    />
-                    Belum Lunas
-                </label>
-                </div>
-                <button type="submit">
-                    Simpan
-                </button>
-                <p>{msg}</p>
-                </form>
+      {formVisible && (
+        <div className={styles.formWrapper}>
+          <h3>Input Data Baru</h3>
+          <form onSubmit={handleSubmit}>
+            <div className={styles.formGroup}>
+              <span>Tanggal Pesanan</span>
+              <input
+                type="date"
+                value={order_date}
+                onChange={(e) => setOrderDate(e.target.value)}
+                required
+              />
             </div>
-        )}
-
-        <div className={styles.tableWrapper}>
-            <table>
-                <thead>
-                <tr>
-                    <th>No</th>
-                    <th>Tanggal Pesanan</th>
-                    <th>Nama Pemesan</th>
-                    <th>Paket</th>
-                    <th>Jumlah</th>
-                    <th>Status</th>
-                    <th>Aksi</th>
-                </tr>
-                </thead>
-                <tbody>
-                    {preorders.map((item, index) => (
-                        <tr key={item.id}>
-                        <td>{index + 1}</td>
-                        <td>{new Date(item.order_date).toLocaleDateString('en-GB')}</td>
-                        <td>{item.order_by}</td>
-                        <td>{item.selected_package}</td>
-                        <td>{item.qty}</td>
-                        <td>{item.is_paid ? 'Lunas':'Belum Lunas'}</td>
-                        <td>
-                          <button onClick={() => handleEdit(item)}>Edit</button>
-                          <button onClick={() => handleDelete(item.id)}>Delete</button>
-                        </td>
-                        </tr>
-                    ))}
-                    {preorders.length === 0 && (
-                        <tr>
-                        <td colSpan="8">No Data Available</td>
-                        </tr>
-                    )}
-                </tbody>
-            </table>    
+            <div className={styles.formGroup}>
+              <span>Nama Pemesan</span>
+              <select
+                value={order_by}
+                onChange={(e) => setOrderBy(e.target.value)}
+                required
+              >
+                <option value="">Pilih Pemesan</option>
+                {customers.map((customer) => (
+                  <option key={customer.id} value={customer.id}>
+                    {customer.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className={styles.formGroup}>
+              <span>Paket</span>
+              <select
+                value={selected_package}
+                onChange={(e) => setSelectedPackage(e.target.value)}
+                required
+              >
+                <option value="">Pilih Paket</option>
+                {pkgs.map((pkg) => (
+                  <option key={pkg.id} value={pkg.id}>
+                    {pkg.nama}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className={styles.formGroup}>
+              <span>Jumlah</span>
+              <input
+                type="number"
+                value={qty}
+                onChange={(e) => setQty(e.target.value)}
+                placeholder="Input Jumlah"
+                required
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <span>Status</span>
+              <label>
+                <input
+                  type="radio"
+                  value="Lunas"
+                  checked={is_paid === 'Lunas'}
+                  onChange={(e) => setStatus(e.target.value)}
+                />
+                Lunas
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  value="Belum Lunas"
+                  checked={is_paid === 'Belum Lunas'}
+                  onChange={(e) => setStatus(e.target.value)}
+                />
+                Belum Lunas
+              </label>
+            </div>
+            <button type="submit">Simpan</button>
+            <p>{msg}</p>
+          </form>
         </div>
+      )}
+
+      <div className={styles.tableWrapper}>
+        <table>
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Tanggal Pesanan</th>
+              <th>Nama Pemesan</th>
+              <th>Paket</th>
+              <th>Jumlah</th>
+              <th>Status</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {Array.isArray(preorders) && preorders.length > 0 ? (
+              preorders.map((item, index) => (
+                <tr key={item.id}>
+                  <td>{index + 1}</td>
+                  <td>{new Date(item.order_date).toLocaleDateString('en-GB')}</td>
+                  <td>{item.customer?.name}</td>
+                  <td>{item.Pkg?.nama}</td>
+                  <td>{item.qty}</td>
+                  <td>{item.is_paid ? 'Lunas' : 'Belum Lunas'}</td>
+                  <td>
+                    <button onClick={() => handleEdit(item)}>Edit</button>
+                    <button onClick={() => handleDelete(item.id)}>Delete</button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="7">No Data Available</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
-} 
+}

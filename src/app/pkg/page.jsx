@@ -10,6 +10,7 @@ export default function PkgPage() {
   const [deskripsi, setDeskripsi] = useState('');
   const [msg, setMsg] = useState('');
   const [editId, setEditId] = useState(null);
+  const [error, setError] = useState('');
 
   const fetchPkgs = async () => {
     try {
